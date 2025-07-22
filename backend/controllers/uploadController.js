@@ -78,7 +78,24 @@ const uploadExcel = async (req, res) => {
   }
 };
 
+// Get uploaded files for the authenticated user
+const getFiles = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    res.json({
+      success: true,
+      files: user.uploadHistory || []
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch files', error: error.message });
+  }
+};
+
 module.exports = {
   upload,
-  uploadExcel
+  uploadExcel,
+  getFiles
 }; 

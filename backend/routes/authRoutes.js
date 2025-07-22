@@ -7,8 +7,8 @@ const { authenticateToken, requireAdmin, rateLimiter } = require('../middleware/
 const authRateLimiter = rateLimiter(5, 15 * 60 * 1000); // 5 requests per 15 minutes
 
 // Public routes (no authentication required)
-router.post('/register', authRateLimiter, authController.register);
-router.post('/login', authRateLimiter, authController.login);
+router.post('/register', authController.register);
+router.post('/login', authController.login);
 
 // Protected routes (authentication required)
 router.get('/profile', authenticateToken, authController.getProfile);
