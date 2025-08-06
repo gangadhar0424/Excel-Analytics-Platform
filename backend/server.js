@@ -13,6 +13,15 @@ const { corsMiddleware, errorHandler, rateLimiter } = require('./middleware/auth
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const dataCleaningRoutes = require('./routes/dataCleaningRoutes');
+const advancedAnalyticsRoutes = require('./routes/advancedAnalyticsRoutes');
+const collaborationRoutes = require('./routes/collaborationRoutes');
+const exportReportingRoutes = require('./routes/exportReportingRoutes');
+const dataIntegrationRoutes = require('./routes/dataIntegrationRoutes');
+const securityComplianceRoutes = require('./routes/securityComplianceRoutes');
+const performanceRoutes = require('./routes/performanceRoutes');
+const notificationsRoutes = require('./routes/notificationsRoutes');
+const aiFeaturesRoutes = require('./routes/aiFeaturesRoutes');
 
 // Initialize Express app
 const app = express();
@@ -48,7 +57,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Rate limiting for all routes
-app.use(rateLimiter(100, 15 * 60 * 1000)); // 100 requests per 15 minutes
+// app.use(rateLimiter(100, 15 * 60 * 1000)); // 100 requests per 15 minutes
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -63,6 +72,24 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
+// New Feature: Data Cleaning Tools
+app.use('/api/data-cleaning', dataCleaningRoutes);
+// New Feature: Advanced Analytics & Visualization
+app.use('/api/advanced-analytics', advancedAnalyticsRoutes);
+// New Feature: Collaboration & Sharing
+app.use('/api/collaboration', collaborationRoutes);
+// New Feature: Export & Reporting
+app.use('/api/export-reporting', exportReportingRoutes);
+// New Feature: Data Source Integrations
+app.use('/api/data-integration', dataIntegrationRoutes);
+// New Feature: Security & Compliance
+app.use('/api/security-compliance', securityComplianceRoutes);
+// New Feature: Performance & Scalability
+app.use('/api/performance', performanceRoutes);
+// New Feature: Notifications
+app.use('/api/notifications', notificationsRoutes);
+// New Feature: AI-Powered Features
+app.use('/api/ai-features', aiFeaturesRoutes);
 
 // File upload routes (to be implemented)
 // app.use('/api/upload', uploadRoutes);

@@ -1,5 +1,6 @@
-const User = require('../models/User');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
 // Generate JWT Token
 const generateToken = (userId, role) => {
@@ -32,7 +33,7 @@ const register = async (req, res) => {
     // Create new user
     const user = new User({
       username,
-      email,
+      email: email.toLowerCase(),
       password,
       role: role || 'user' // Default to 'user' role
     });
