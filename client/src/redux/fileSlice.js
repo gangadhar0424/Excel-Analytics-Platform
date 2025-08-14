@@ -28,10 +28,10 @@ export const uploadFile = createAsyncThunk('files/uploadFile', async (file, thun
   }
 });
 
-export const deleteFile = createAsyncThunk('files/deleteFile', async (fileId, thunkAPI) => {
+export const deleteFile = createAsyncThunk('files/deleteFile', async (fileName, thunkAPI) => {
   try {
-    await api.delete(`/api/upload/${fileId}`);
-    return fileId;
+    await api.delete(`/api/upload/${fileName}`);
+    return fileName;
   } catch (err) {
     return thunkAPI.rejectWithValue(err.message || 'File delete failed');
   }
@@ -59,7 +59,7 @@ const fileSlice = createSlice({
         state.files.unshift(action.payload);
       })
       .addCase(deleteFile.fulfilled, (state, action) => {
-        state.files = state.files.filter(f => f._id !== action.payload);
+        state.files = state.files.filter(f => f.fileName !== action.payload);
       });
   },
 });

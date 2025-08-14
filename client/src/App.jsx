@@ -1,72 +1,187 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from './redux/authSlice';
-import Login from './pages/Login.jsx';
-import Register from './pages/Register.jsx';
-import Dashboard from './pages/Dashboard.jsx';
-import Upload from './pages/Upload.jsx';
-import Analyze from './pages/Analyze.jsx';
-import PrivateRoute from './components/PrivateRoute.jsx';
-import Home from './pages/Home.jsx';
+import { ThemeProvider } from './contexts/ThemeContext';
+import ResponsiveNavbar from './components/ResponsiveNavbar';
+import OnboardingTour from './components/OnboardingTour';
+import LandingPopup from './components/LandingPopup';
 
-function Navbar() {
+// Pages
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import Upload from './pages/Upload';
+import Analyze from './pages/Analyze';
+import Settings from './pages/Settings';
+
+// Feature Pages
+import DataCleaning from './pages/DataCleaning';
+import AdvancedAnalytics from './pages/AdvancedAnalytics';
+import Collaboration from './pages/Collaboration';
+import ExportReporting from './pages/ExportReporting';
+import DataIntegration from './pages/DataIntegration';
+import UserExperience from './pages/UserExperience';
+import SecurityCompliance from './pages/SecurityCompliance';
+import Performance from './pages/Performance';
+import Notifications from './pages/Notifications';
+import AIFeatures from './pages/AIFeatures';
+
+// Protected Route Component
+const PrivateRoute = ({ children }) => {
+  const { isAuthenticated } = useSelector(state => state.auth);
+  return isAuthenticated ? children : <Navigate to="/login" />;
+};
+
+function App() {
   const dispatch = useDispatch();
+  const { user, isAuthenticated } = useSelector(state => state.auth);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showLandingPopup, setShowLandingPopup] = useState(() => {
+    // Always show landing popup first, regardless of authentication
+    return true;
+  });
   const navigate = useNavigate();
-  const { token, user } = useSelector(state => state.auth);
+
+  useEffect(() => {
+    // Check if user is new and hasn't completed onboarding
+    if (user && !localStorage.getItem('onboardingCompleted')) {
+      setShowOnboarding(true);
+    }
+    
+    // Only hide landing popup if user has explicitly started the process
+    // Don't auto-hide based on authentication state
+  }, [user, isAuthenticated]);
 
   const handleLogout = () => {
     dispatch(logout());
+    setShowLandingPopup(true); // Show landing popup again after logout
+  };
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    localStorage.setItem('onboardingCompleted', 'true');
+  };
+
+  const handleStartAnalyzing = () => {
+    setShowLandingPopup(false);
     navigate('/login');
   };
 
   return (
-    <nav className="bg-white shadow p-4 flex justify-between items-center">
-      <Link to="/" className="text-xl font-bold text-blue-600 hover:text-blue-800 transition-colors duration-200">
-        Excel Analytics Platform
-      </Link>
-      <div className="flex items-center space-x-4">
-        {token ? (
-          <>
-            <span className="font-semibold text-blue-600">{user?.name || 'User'}</span>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-200"
-            >
-              Logout
-            </button>
-          </>
+    <ThemeProvider>
+      <div className="min-h-screen transition-colors duration-300">
+        {/* Landing Popup - Show first always */}
+        {showLandingPopup ? (
+          <LandingPopup onStartAnalyzing={handleStartAnalyzing} />
         ) : (
           <>
-            <Link to="/login" className="text-gray-600 hover:text-blue-600 transition-colors duration-200">Login</Link>
-            <Link to="/register" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">Register</Link>
+            {/* Responsive Navigation */}
+            <ResponsiveNavbar user={user} onLogout={handleLogout} />
+            
+            {/* Main Content */}
+            <div className="pt-16">
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                
+                {/* Protected Routes */}
+                <Route path="/" element={
+                  <PrivateRoute>
+                    <Dashboard />
+                  </PrivateRoute>
+                } />
+                <Route path="/upload" element={
+                  <PrivateRoute>
+                    <Upload />
+                  </PrivateRoute>
+                } />
+                <Route path="/analyze/:fileId" element={
+                  <PrivateRoute>
+                    <Analyze />
+                  </PrivateRoute>
+                } />
+                <Route path="/settings" element={
+                  <PrivateRoute>
+                    <Settings />
+                  </PrivateRoute>
+                } />
+                
+                {/* Feature Routes */}
+                <Route path="/data-cleaning" element={
+                  <PrivateRoute>
+                    <DataCleaning />
+                  </PrivateRoute>
+                } />
+                <Route path="/advanced-analytics" element={
+                  <PrivateRoute>
+                    <AdvancedAnalytics />
+                  </PrivateRoute>
+                } />
+                <Route path="/collaboration" element={
+                  <PrivateRoute>
+                    <Collaboration />
+                  </PrivateRoute>
+                } />
+                <Route path="/export-reporting" element={
+                  <PrivateRoute>
+                    <ExportReporting />
+                  </PrivateRoute>
+                } />
+                <Route path="/data-integration" element={
+                  <PrivateRoute>
+                    <DataIntegration />
+                  </PrivateRoute>
+                } />
+                <Route path="/user-experience" element={
+                  <PrivateRoute>
+                    <UserExperience />
+                  </PrivateRoute>
+                } />
+                <Route path="/security-compliance" element={
+                  <PrivateRoute>
+                    <SecurityCompliance />
+                  </PrivateRoute>
+                } />
+                <Route path="/performance" element={
+                  <PrivateRoute>
+                    <Performance />
+                  </PrivateRoute>
+                } />
+                <Route path="/notifications" element={
+                  <PrivateRoute>
+                    <Notifications />
+                  </PrivateRoute>
+                } />
+                <Route path="/ai-features" element={
+                  <PrivateRoute>
+                    <AIFeatures />
+                  </PrivateRoute>
+                } />
+              </Routes>
+            </div>
+            
+            {/* Onboarding Tour */}
+            <OnboardingTour 
+              isOpen={showOnboarding}
+              onClose={() => setShowOnboarding(false)}
+              onComplete={handleOnboardingComplete}
+            />
           </>
         )}
       </div>
-    </nav>
+    </ThemeProvider>
   );
 }
 
-function App() {
+// Wrapper component to provide navigation context
+function AppWrapper() {
   return (
     <Router>
-      <Navbar />
-      {/* Removed centering/background wrapper here */}
-      <>
-        <Routes future={{ v7_relativeSplatPath: true }}>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route element={<PrivateRoute />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/upload" element={<Upload />} />
-            <Route path="/analyze/:fileId" element={<Analyze />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </>
+      <App />
     </Router>
   );
 }
 
-export default App;
+export default AppWrapper;

@@ -137,9 +137,38 @@ const getParsedFile = async (req, res) => {
   }
 };
 
+// Delete a specific uploaded file
+const deleteFile = async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    // Find file in uploadHistory by fileName only
+    const fileEntry = user.uploadHistory.find(f => f.fileName === fileId);
+    if (!fileEntry) {
+      return res.status(404).json({ success: false, message: 'File not found in your uploads' });
+    }
+    // Remove file from disk
+    const uploadPath = process.env.UPLOAD_PATH || './uploads';
+    const filePath = path.join(uploadPath, fileEntry.fileName);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+    // Remove file from user's uploadHistory
+    user.uploadHistory = user.uploadHistory.filter(f => f.fileName !== fileId);
+    await user.save();
+    res.json({ success: true, message: 'File deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to delete file', error: error.message });
+  }
+};
+
 module.exports = {
   upload,
   uploadExcel,
   getFiles,
-  getParsedFile
+  getParsedFile,
+  deleteFile
 }; 

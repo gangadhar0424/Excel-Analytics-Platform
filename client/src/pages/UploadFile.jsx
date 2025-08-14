@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { HomeIcon, DocumentArrowUpIcon, FolderOpenIcon } from '@heroicons/react/24/outline';
 import { Bar, Pie, Line, Doughnut } from 'react-chartjs-2';
+import api from '../services/api';
 
 const APP_NAME = 'DataVista';
 const chartTypes = [
@@ -23,16 +24,20 @@ const dummyData = [
 const UploadFile = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
-  const [xAxis, setXAxis] = useState(dummyColumns[0]);
-  const [yAxis, setYAxis] = useState(dummyColumns[1]);
+  const [columns, setColumns] = useState([]);
+  const [previewData, setPreviewData] = useState([]);
+  const [xAxis, setXAxis] = useState('');
+  const [yAxis, setYAxis] = useState('');
   const [chartType, setChartType] = useState('bar');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const chartData = {
-    labels: dummyData.map(row => row[xAxis]),
+    labels: previewData.map(row => row[xAxis]),
     datasets: [
       {
         label: yAxis,
-        data: dummyData.map(row => row[yAxis]),
+        data: previewData.map(row => row[yAxis]),
         backgroundColor: [
           '#7c3aed', '#a78bfa', '#c4b5fd', '#f472b6', '#fbbf24', '#34d399', '#60a5fa', '#f87171', '#facc15', '#4ade80'
         ],
@@ -42,10 +47,32 @@ const UploadFile = () => {
     ],
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     if (e.target.files && e.target.files[0]) {
+      setLoading(true);
+      setError('');
       setSelectedFile(e.target.files[0]);
-      setShowPreview(true);
+      try {
+        const formData = new FormData();
+        formData.append('file', e.target.files[0]);
+        const res = await api.post('/api/upload', formData, { headers: {} });
+        const { headers, preview } = res.data;
+        setColumns(headers);
+        setPreviewData(preview.map(rowArr => {
+          const obj = {};
+          headers.forEach((col, idx) => {
+            obj[col] = rowArr[idx];
+          });
+          return obj;
+        }));
+        setXAxis(headers[0] || '');
+        setYAxis(headers[1] || '');
+        setShowPreview(true);
+      } catch (err) {
+        setError(err.message || 'Failed to upload and parse file');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -74,20 +101,22 @@ const UploadFile = () => {
           />
           {showPreview && (
             <>
+             {error && <div className="text-red-500 mb-2">{error}</div>}
+             {loading && <div className="text-gray-400 mb-2">Uploading and parsing file...</div>}
               <h3 className="text-lg font-semibold mb-2 mt-6">File Preview</h3>
               <div className="overflow-x-auto mb-6">
                 <table className="min-w-full border rounded">
                   <thead>
                     <tr>
-                      {dummyColumns.map(col => (
+                      {columns.map(col => (
                         <th key={col} className="px-3 py-2 border-b bg-purple-50 text-purple-700 font-semibold">{col}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {dummyData.map((row, idx) => (
+                    {previewData.map((row, idx) => (
                       <tr key={idx}>
-                        {dummyColumns.map(col => (
+                        {columns.map(col => (
                           <td key={col} className="px-3 py-2 border-b text-center">{row[col]}</td>
                         ))}
                       </tr>
@@ -104,7 +133,7 @@ const UploadFile = () => {
                     value={xAxis}
                     onChange={e => setXAxis(e.target.value)}
                   >
-                    {dummyColumns.map(col => (
+                    {columns.map(col => (
                       <option key={col} value={col}>{col}</option>
                     ))}
                   </select>
@@ -116,7 +145,7 @@ const UploadFile = () => {
                     value={yAxis}
                     onChange={e => setYAxis(e.target.value)}
                   >
-                    {dummyColumns.map(col => (
+                    {columns.map(col => (
                       <option key={col} value={col}>{col}</option>
                     ))}
                   </select>

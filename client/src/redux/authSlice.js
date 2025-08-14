@@ -6,6 +6,7 @@ const initialState = {
   token: localStorage.getItem('token') || null,
   loading: false,
   error: null,
+  isAuthenticated: !!localStorage.getItem('token'),
 };
 
 export const loginUser = createAsyncThunk('auth/login', async (credentials, thunkAPI) => {
@@ -35,10 +36,12 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.token = null;
+      state.isAuthenticated = false;
       localStorage.removeItem('token');
     },
     setUser: (state, action) => {
       state.user = action.payload;
+      state.isAuthenticated = true;
     },
   },
   extraReducers: (builder) => {
@@ -51,10 +54,12 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload.data.user;
         state.token = action.payload.data.token;
+        state.isAuthenticated = true;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        state.isAuthenticated = false;
       })
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
@@ -64,10 +69,12 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload.data.user;
         state.token = action.payload.data.token;
+        state.isAuthenticated = true;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        state.isAuthenticated = false;
       });
   },
 });

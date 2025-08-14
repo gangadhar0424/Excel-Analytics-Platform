@@ -8,12 +8,23 @@ const APP_NAME = 'DataVista';
 
 const UploadedFiles = () => {
   const dispatch = useDispatch();
-  const { files, loading } = useSelector(state => state.files);
+  const { files, loading, error } = useSelector(state => state.files);
   const navigate = useNavigate();
 
   useEffect(() => {
     dispatch(fetchFiles());
   }, [dispatch]);
+
+  const handleAnalyze = (file) => {
+    navigate(`/analyze/${file._id}`);
+  };
+
+  const [deletingId, setDeletingId] = React.useState(null);
+  const handleDelete = async (file) => {
+    setDeletingId(file.fileName);
+    await dispatch(deleteFile(file.fileName));
+    setDeletingId(null);
+  };
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -32,9 +43,11 @@ const UploadedFiles = () => {
       <main className="flex-1 flex flex-col bg-gray-50 px-8 py-12">
         <div className="bg-white rounded-lg shadow p-8 w-full max-w-5xl mx-auto">
           <h1 className="text-2xl font-bold mb-6 text-gray-800">Monitor History</h1>
-          {loading ? (
+          {error ? (
+            <div className="text-center text-red-500 py-8">{error}</div>
+          ) : loading ? (
             <div className="text-center text-gray-400 py-8">Loading...</div>
-          ) : files.length === 0 ? (
+          ) : !Array.isArray(files) || files.length === 0 ? (
             <div className="flex flex-col items-center py-8">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 text-purple-400 mb-2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-4m0 0V8m0 4h4m-4 0H8m12 4.5V6.75A2.25 2.25 0 0017.75 4.5H6.25A2.25 2.25 0 004 6.75v10.5A2.25 2.25 0 006.25 19.5h11.5A2.25 2.25 0 0020 17.25V17" />
@@ -60,8 +73,14 @@ const UploadedFiles = () => {
                     <td className="py-2">{file.uploadedAt ? new Date(file.uploadedAt).toLocaleDateString() : '-'}</td>
                     <td className="py-2">{file.fileSize ? (file.fileSize / 1024).toFixed(2) + ' KB' : '-'}</td>
                     <td className="py-2 space-x-2">
-                      <button className="text-purple-600 hover:underline" onClick={() => navigate(`/analyze/${file._id}`)}>Analyze</button>
-                      <button className="text-red-500 hover:underline">Delete</button>
+                      <button className="text-purple-600 hover:underline" onClick={() => handleAnalyze(file)}>Analyze</button>
+                      <button
+                        className="text-red-500 hover:underline disabled:opacity-50"
+                        onClick={() => handleDelete(file)}
+                        disabled={deletingId === file.fileName}
+                      >
+                        {deletingId === file.fileName ? 'Deleting...' : 'Delete'}
+                      </button>
                     </td>
                   </tr>
                 ))}

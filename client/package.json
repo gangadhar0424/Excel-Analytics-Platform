@@ -10,7 +10,9 @@
     "react-router-dom": "^6.15.0",
     "react-chartjs-2": "^5.2.0",
     "chart.js": "^4.4.0",
-    "@heroicons/react": "^2.0.18"
+    "@heroicons/react": "^2.0.18",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^2.5.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.21",
