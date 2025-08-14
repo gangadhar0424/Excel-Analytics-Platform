@@ -78,7 +78,68 @@ const uploadExcel = async (req, res) => {
   }
 };
 
+// Get uploaded files for the authenticated user
+const getFiles = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    res.json({
+      success: true,
+      files: user.uploadHistory || []
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch files', error: error.message });
+  }
+};
+
+// Get parsed data for a specific uploaded file
+const getParsedFile = async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    // Find file in uploadHistory by _id or fileName
+    const fileEntry = user.uploadHistory.id(fileId) || user.uploadHistory.find(f => f.fileName === fileId);
+    if (!fileEntry) {
+      return res.status(404).json({ success: false, message: 'File not found in your uploads' });
+    }
+    // Read and parse the file from disk
+    const uploadPath = process.env.UPLOAD_PATH || './uploads';
+    const filePath = path.join(uploadPath, fileEntry.fileName);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ success: false, message: 'File not found on server' });
+    }
+    const workbook = XLSX.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    const columns = json[0] || [];
+    const dataRows = json.slice(1);
+    // Convert each row array to an object using columns as keys
+    const data = dataRows.map(row => {
+      const obj = {};
+      columns.forEach((col, idx) => {
+        obj[col] = row[idx];
+      });
+      return obj;
+    });
+    res.json({
+      success: true,
+      columns,
+      data
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to parse file', error: error.message });
+  }
+};
+
 module.exports = {
   upload,
-  uploadExcel
+  uploadExcel,
+  getFiles,
+  getParsedFile
 }; 

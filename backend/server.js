@@ -48,7 +48,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Rate limiting for all routes
-app.use(rateLimiter(100, 15 * 60 * 1000)); // 100 requests per 15 minutes
+// app.use(rateLimiter(100, 15 * 60 * 1000)); // 100 requests per 15 minutes
 
 // Health check endpoint
 app.get('/health', (req, res) => {
